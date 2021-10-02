@@ -1,6 +1,7 @@
 import pymysql
 import json
 import psycopg2
+import snowflake.connector
 
 def maria_connector():
     with open('dbinfo.json') as fp:
@@ -56,5 +57,22 @@ def postgres_connector():
     except Exception as e:
         print(f"Exception occur:{e}")
 
+
+def snowflake_connector():
+    try:
+        with open('dbinfo.json') as fp:
+            dbinfo = json.loads(fp.read())
+
+        con = snowflake.connector.connect(user=dbinfo['SF_USER'],
+                                    password=dbinfo['SF_PWD'],
+                                    account=dbinfo['SF_ACCOUNT'])
+        cur = con.cursor()
+        cur.execute("SELECT current_version();")
+        version = cur.fetchone()[0]
+        print(f"version of snowflake: {version}")
+        return con, version
+    except Exception as e:
+        print(f"Exception occur:{e}")
+
 if __name__ == "__main__":
-    postgres_connector()
+    snowflake_connector()
