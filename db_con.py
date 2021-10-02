@@ -2,6 +2,7 @@ import pymysql
 import json
 import psycopg2
 import snowflake.connector
+from sqlalchemy import create_engine, text
 
 def maria_connector():
     with open('dbinfo.json') as fp:
@@ -31,8 +32,8 @@ def mysql_connector():
                               , database=dbinfo["MYSQL_DB"]
                               , port=dbinfo["MYSQL_PORT"])
         cur = con.cursor()
-        cur.execute("SELECT VERSION();")
-        version = cur.fetchone()
+        cur.execute("select @@version;")
+        version = cur.fetchone()[0]
         print(version)
         return con
 
@@ -74,5 +75,37 @@ def snowflake_connector():
     except Exception as e:
         print(f"Exception occur:{e}")
 
+
+def sqlalchemy_connector():
+    try:
+        with open('dbinfo.json') as fp:
+            dbinfo = json.loads(fp.read())
+
+        sf_idenfier = f"snowflake://{dbinfo['SF_USER']}:{dbinfo['SF_PWD']}@{dbinfo['SF_ACCOUNT']}"
+        engine = create_engine(f"{sf_idenfier}")
+        con = engine.connect()
+        version = con.execute("SELECT current_version();").fetchone()[0]
+        print(version)
+    except Exception as e:
+        print(e)
+
+    finally:
+        con.close()
+        engine.dispose()
+        print("sqlalchemy connection close")
+
+
+
 if __name__ == "__main__":
-    snowflake_connector()
+    # maria_connector()
+    # mysql_connector()
+    # postgres_connector()
+    # snowflake_connector()
+    # sqlalchemy_connector()
+
+
+"""
+References
+
+https://docs.snowflake.com/en/user-guide/sqlalchemy.html 
+"""
