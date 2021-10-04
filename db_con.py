@@ -1,3 +1,10 @@
+"""
+
+https://stackoverflow.com/questions/44765482/multiple-constructors-the-pythonic-way
+
+"""
+
+
 import pymysql
 import json
 import snowflake.connector
@@ -41,7 +48,7 @@ class mysqldb(dbms):
 
 
     def close(self):
-        self.con.close()
+        return self.con.close()
 
     def validate(self):
         connection = self.connect_db()
@@ -57,13 +64,21 @@ class mysqldb(dbms):
 
 class snowflakedb(dbms):
     def connect_db(self):
-        con = snowflake.connector.connect(user = self.user,
+        self.con = snowflake.connector.connect(user = self.user,
                                 password = self.pwd,
                                 account = self.host)
 
-        cur = con.cursor()
+        cur = self.con.cursor()
         version = cur.execute('select current_version();').fetchone()[0]
         print(version)
+        return self.con
+
+    def close(self):
+        return self.con.close()
+
+    def validate(self):
+
+        con = snowflake.connector.connect
 
 
 if __name__ == "__main__":
