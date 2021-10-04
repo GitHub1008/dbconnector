@@ -82,10 +82,12 @@ def sqlalchemy_connector():
             dbinfo = json.loads(fp.read())
 
         sf_idenfier = f"snowflake://{dbinfo['SF_USER']}:{dbinfo['SF_PWD']}@{dbinfo['SF_ACCOUNT']}"
-        engine = create_engine(f"{sf_idenfier}")
+        mysql_idenfier = f"mysql+pymysql://{dbinfo['MYSQL_USER']}:{dbinfo['MYSQL_PWD']}@{dbinfo['MYSQL_HOST']}:{dbinfo['MYSQL_PORT']}/{dbinfo['MYSQL_DB']}"
+        engine = create_engine(f"{mysql_idenfier}", echo=False, encoding='utf-8')
         con = engine.connect()
-        version = con.execute("SELECT current_version();").fetchone()[0]
-        print(version)
+        # sf_version = con.execute("SELECT current_version();").fetchone()[0]
+        mysql_version = con.execute("SELECT VERSION();").fetchone()[0]
+        print(mysql_version)
     except Exception as e:
         print(e)
 
@@ -97,11 +99,11 @@ def sqlalchemy_connector():
 
 
 if __name__ == "__main__":
-    maria_connector()
+    # maria_connector()
     mysql_connector()
-    postgres_connector()
-    snowflake_connector()
-    sqlalchemy_connector()
+    # postgres_connector()
+    # snowflake_connector()
+    # sqlalchemy_connector()
 
 
 """

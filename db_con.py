@@ -1,14 +1,32 @@
 import pymysql
 import json
+import snowflake.connector
+
 
 class dbms():
-    def __init__(self, host, user, pwd, port):
-        self.host = host
-        self.user = user
-        self.pwd = pwd
+    def __init__(self, **kwargs):
+        self.host = kwargs['host']
+        self.user = kwargs['user']
+        self.pwd = kwargs['pwd']
+    #
+    # @classmethod
+    # def dbcon(cls, account, user, pwd) -> 'dbms':
+    #     return cls(host=account, user=user, pwd=pwd)
+
+    def connect_db(self):
+        pass
+
+    def close(self):
+        pass
+
+    def validate(self):
+        pass
+
+class mysqldb(dbms):
+    def __init__(self, port, **kwargs):
+        super().__init__(**kwargs)
         self.port = port
 
-class mysql(dbms):
     def connect_db(self):
         try:
             self.con = pymysql.connect(user=self.user,
@@ -19,6 +37,7 @@ class mysql(dbms):
 
         except Exception as e:
             print(f"ERROR OCCUR:: {e}")
+            raise e
 
 
     def close(self):
@@ -33,19 +52,34 @@ class mysql(dbms):
             print(version)
         except Exception as e:
             print(f"ERROR OCCUR:: {e}")
+        finally:
+            connection.close()
 
+class snowflakedb(dbms):
+    def connect_db(self):
+        con = snowflake.connector.connect(user = self.user,
+                                password = self.pwd,
+                                account = self.host)
 
-
+        cur = con.cursor()
+        version = cur.execute('select current_version();').fetchone()[0]
+        print(version)
 
 
 if __name__ == "__main__":
     with open('dbinfo.json') as fp:
         dbinfo = json.loads(fp.read())
-    mycon = mysql(host=dbinfo['MYSQL_HOST'],
+    mysqlcon = mysqldb(host=dbinfo['MYSQL_HOST'],
                   user=dbinfo['MYSQL_USER'],
                   pwd=dbinfo['MYSQL_PWD'],
                   port=dbinfo['MYSQL_PORT'])
-    mycon.connect_db()
-    mycon.validate()
-    mycon.close()
+    mysqlcon.connect_db()
+    mysqlcon.validate()
+    mysqlcon.close()
+
+    snowflakecon = snowflakedb(user=dbinfo['SF_USER'],
+                               pwd=dbinfo['SF_PWD'],
+                               host=dbinfo['SF_ACCOUNT'])
+    snowflakecon.connect_db()
+
 
